@@ -67,6 +67,10 @@ class TuringMachine(object):
     Turing machine has entered one of these states and immediately halts
     execution.
 
+    Altohugh they would otherwise be necessary in the formal mathematical
+    definition of a Turing machine, this class requires the user to specify
+    neither the input alphabet nor the tape alphabet.
+
     """
 
     def __init__(self, states, initial_state, accept_state, reject_state,
