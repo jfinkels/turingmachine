@@ -17,10 +17,18 @@
 # You should have received a copy of the GNU General Public License along with
 # turingmachine.  If not, see <http://www.gnu.org/licenses/>.
 """Provides an implementation of the Turing machine model."""
+import logging
 
-#: Translation of left and right strings to -1 and +1 for use in computing the
-#: next location of the read/write head of the Turing machine.
-DIRECTION_CHANGE = {'L': -1, 'R': +1}
+# To make debugging messages visible, uncomment the following line.
+#logging.basicConfig(level=logging.DEBUG)
+
+#: Represents a movement of the read/write head of the Turing machine to the
+#: left.
+L = -1
+
+#: Represents a movement of the read/write head of the Turing machine to the
+#: right.
+R = +1
 
 
 class TuringMachine(object):
@@ -37,11 +45,11 @@ class TuringMachine(object):
     :meth:`reset` is called, the state of the machine will be set to this
     state.
 
-    `accept_states` is a set of states that will cause the machine to halt and
-    accept (that is, return ``True``). This set must be a subset of `states`.
+    `accept_state` is the state that will cause the machine to halt and accept
+    (that is, return ``True``). This set must be a member of `states`.
 
-    `reject_states` is a set of states that will cause the machine to halt and
-    reject (that is, return ``False``). This set must be a subset of `states`.
+    `reject_state` is the state that will cause the machine to halt and reject
+    (that is, return ``False``). This set must be a member of `states`.
 
     `transition` is a two-dimensional dictionary specifying how the
     "configuration" of the machine (that is, the head location, state, and
@@ -50,16 +58,22 @@ class TuringMachine(object):
     dictionary must be a three-tuple, *(new_state, new_symbol, direction)*,
     where *new_state* is the next state in which the Turing machine will be,
     *new_symbol* is the symbol that will be written in the current location on
-    the string, and *direction* is either ``'L'`` or ``'R'``, representing
+    the string, and *direction* is either :data:`L` or :data:`R`, representing
     movement of the head left or right, repectively.
+
+    The transition dictionary need not have an entry for the accept and reject
+    states. For example, the accept and reject states need not be in
+    `transition`, because the implementation of :meth:`__call__` checks if this
+    Turing machine has entered one of these states and immediately halts
+    execution.
 
     """
 
-    def __init__(self, states, initial_state, accept_states, reject_states,
+    def __init__(self, states, initial_state, accept_state, reject_state,
                  transition, *args, **kw):
         self.states = states
-        self.accept_states = accept_states
-        self.reject_states = reject_states
+        self.accept_state = accept_state
+        self.reject_state = reject_state
         self.initial_state = initial_state
         self.current_state = self.initial_state
         self.transition = transition
@@ -67,10 +81,32 @@ class TuringMachine(object):
         # and one blank on the right
         self.head_location = 1
 
-    def reset(self):
-        """Resets the Turing machine to its initial state and head location."""
-        self.head_location = 1
-        self.current_state = self.initial_state
+    def _log_state(self, string):
+        """Logs a visual representation of the current head location, state,
+        and contents of the tape of this Turing machine.
+
+        For example, if the Turing machine has ``'_010_'`` on its input tape
+        (that is, if `string` is ``'_010_'``), is in state ``4``, and has
+        read/write head at the location of the ``1`` symbol, this method would
+        log the following messages, one line at a time.
+
+            _010_
+              ^
+              4
+
+        The caret represents the current location of the read/write head, and
+        the number beneath it represents the current state of the machine.
+
+        This method should be called from :meth:`__call__`, during the
+        execution of the Turing machine on a particular string.
+
+        """
+        h = self.head_location
+        q = self.current_state
+        logging.debug('')
+        logging.debug(string)
+        logging.debug(' ' * h + '^')
+        logging.debug(' ' * h + str(q))
 
     def __call__(self, string):
         """Runs the computer program specified by this Turing machine on
@@ -94,21 +130,44 @@ class TuringMachine(object):
         head to the left most non-blank character of the string.
 
         """
+        # If the head has moved too far to the left or right, add a blank to
+        # the current string in the appropriate location. If a blank is added
+        # to the left, the head location must be incremented, since the string
+        # has now essentially been shifted right by one cell.
+        if self.head_location < 0:
+            string = '_' + string
+            self.head_location += 1
+        elif self.head_location >= len(string):
+            string += '_'
+        self._log_state(string)
         # for the sake of brevity, rename some verbose instance variable
         h = self.head_location
         q = self.current_state
         # compute the new configuration from the transition function
+        #
+        # TODO raise an exception if string[h] contains an unknown symbol
         new_state, new_symbol, direction = self.transition[q][string[h]]
         # check for accepting or rejecting configurations
-        if new_state in self.accept_states:
+        if new_state == self.accept_state:
             return True
-        if new_state in self.reject_states:
+        if new_state == self.reject_state:
             return False
         # write the specified new symbol to the string; Python strings are
         # immutable, so we must create a new one
         new_string = string[:h] + new_symbol + string[h + 1:]
         # set the new state and head location
         self.current_state = new_state
-        self.head_location += DIRECTION_CHANGE[direction]
+        # direction is either L or R, which are defined to be -1 and +1
+        self.head_location += direction
         # continue executing the Turing machine with the new configuration
         return self(new_string)
+
+    def reset(self):
+        """Resets the Turing machine to its initial state and head location.
+
+        This method should be called before each invocation of this Turing
+        machine.
+
+        """
+        self.head_location = 1
+        self.current_state = self.initial_state
