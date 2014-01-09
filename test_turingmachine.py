@@ -85,6 +85,47 @@ class TestTuringMachine(unittest.TestCase):
             assert not is_even('_' + s + '_')
             is_even.reset()
 
+    def test_parity(self):
+        """Tests the execution of a Turing machine that computes the parity of
+        a binary string, that is, whether the number of ones in the binary
+        strings is odd.
+
+        """
+        states = range(4)
+        initial_state = 0
+        accept_state = 2
+        reject_state = 3
+        # begin in pre-reject state
+        # repeat:
+        #   if reading a 1:
+        #     if in pre-accept state, move to pre-reject state
+        #     if in pre-reject state, move to pre-accept state
+        #   move right
+        # if in pre-accept, accept
+        # if in pre-reject, reject
+        transition = {
+            # this state represents having read an even number of ones
+            0: {
+                '0': (0, '0', R),
+                '1': (1, '1', R),
+                '_': (reject_state, '_', L),
+                },
+            # this state represents having read an odd number of ones
+            1: {
+                '0': (1, '0', R),
+                '1': (0, '1', R),
+                '_': (accept_state, '_', R),
+                }
+            }
+        parity = TuringMachine(states, initial_state, accept_state,
+                               reject_state, transition)
+        for s in '011010', '1', '1101011':
+            assert parity('_' + s + '_')
+            parity.reset()
+        for s in '1001', '0', '', '001001':
+            assert not parity('_' + s + '_')
+            parity.reset()
+
     def test_is_palindrome(self):
         """Tests the execution of a Turing machine that computes whether a
         binary string is a palindrome.
