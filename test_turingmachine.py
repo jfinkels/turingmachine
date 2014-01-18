@@ -1,6 +1,6 @@
 # test_turingmachine.py - tests for turingmachine.py
 #
-# Copyright 2013 Jeffrey Finkelstein.
+# Copyright 2014 Jeffrey Finkelstein.
 #
 # This file is part of turingmachine.
 #

@@ -1,6 +1,6 @@
 # turingmachine.py - implementation of the Turing machine model
 #
-# Copyright 2013 Jeffrey Finkelstein.
+# Copyright 2014 Jeffrey Finkelstein.
 #
 # This file is part of turingmachine.
 #
