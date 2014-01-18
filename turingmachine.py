@@ -144,7 +144,7 @@ class TuringMachine(object):
         elif self.head_location >= len(string):
             string += '_'
         self._log_state(string)
-        # for the sake of brevity, rename some verbose instance variable
+        # for the sake of brevity, rename some verbose instance variables
         h = self.head_location
         q = self.current_state
         # compute the new configuration from the transition function
