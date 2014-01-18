@@ -91,7 +91,7 @@ class TestTuringMachine(unittest.TestCase):
         strings is odd.
 
         """
-        states = range(4)
+        states = set(range(4))
         initial_state = 0
         accept_state = 2
         reject_state = 3
@@ -131,7 +131,7 @@ class TestTuringMachine(unittest.TestCase):
         binary string is a palindrome.
 
         """
-        states = range(10)
+        states = set(range(10))
         initial_state = 0
         accept_state = 8
         reject_state = 9
