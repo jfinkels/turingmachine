@@ -45,11 +45,15 @@ that accepts if and only if its input string has an odd number of ones.
                            transitions)
 
     assert parity('_010101_')
+    parity.reset()
     assert not parity('_010100_')
 
 Inputs to the Turing machine must have underscore (`_`) symbols as the first
 and last characters, so that the Turing machine can easily recognize the
 beginning and end of its input.
+
+You must call the `reset()` method if you wish to run the Turing machine more
+than once.
 
 ## Copyright ##
 
