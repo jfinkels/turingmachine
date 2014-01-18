@@ -19,8 +19,13 @@
 """Provides an implementation of the Turing machine model."""
 import logging
 
-# To make debugging messages visible, uncomment the following line.
-#logging.basicConfig(level=logging.DEBUG)
+# Create and configure the logger which logs debugging information by default.
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('[%(levelname)s] %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(level=logging.DEBUG)
 
 #: Represents a movement of the read/write head of the Turing machine to the
 #: left.
@@ -107,10 +112,10 @@ class TuringMachine(object):
         """
         h = self.head_location
         q = self.current_state
-        logging.debug('')
-        logging.debug(string)
-        logging.debug(' ' * h + '^')
-        logging.debug(' ' * h + str(q))
+        logger.debug('')
+        logger.debug(string)
+        logger.debug(' ' * h + '^')
+        logger.debug(' ' * h + str(q))
 
     def __call__(self, string):
         """Runs the computer program specified by this Turing machine on
