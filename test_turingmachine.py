@@ -19,14 +19,29 @@
 """Provides tests for :mod:`turingmachine`."""
 
 from collections import defaultdict
+import logging
 import unittest
 
 from turingmachine import L
+from turingmachine import logger
 from turingmachine import R
 from turingmachine import TuringMachine
 
 
 class TestTuringMachine(unittest.TestCase):
+    """Unit tests for the :class:`turingmachine.TuringMachine` class."""
+
+    def setUp(self):
+        """Disable verbose logging for tests."""
+        self.level = logger.getEffectiveLevel()
+        logger.setLevel(logging.INFO)
+
+    def tearDown(self):
+        """Restore the original logging level for the :mod:`turingmachine`
+        module.
+
+        """
+        logger.setLevel(self.level)
 
     def test_move_left_and_right(self):
         """Tests the execution of a Turing machine that simply moves left and
@@ -54,6 +69,10 @@ class TestTuringMachine(unittest.TestCase):
     def test_is_even(self):
         """Tests the execution of a Turing machine that computes whether a
         binary string represents an even number.
+
+        This Turing machine simply moves right repeatedly until it finds the
+        end of the input string, then checks if the rightmost (that is, least
+        significant) bit is a 0.
 
         """
         states = set(range(4))
@@ -89,6 +108,10 @@ class TestTuringMachine(unittest.TestCase):
         """Tests the execution of a Turing machine that computes the parity of
         a binary string, that is, whether the number of ones in the binary
         strings is odd.
+
+        This Turing machine oscillates between two states, one of which
+        represents having seen an even number of 1s, the other an odd number.
+        Every time it sees a 1, it switches which of those two states it is in.
 
         """
         states = set(range(4))
@@ -129,6 +152,12 @@ class TestTuringMachine(unittest.TestCase):
     def test_is_palindrome(self):
         """Tests the execution of a Turing machine that computes whether a
         binary string is a palindrome.
+
+        This Turing machine operates recursively. If the input string is an
+        empty string or a single bit, it accepts. If the input string has
+        length two or more, it determines if the first and last bits of the
+        input string are the same, then turns each of them into a blank. It
+        then recurses and runs the same algorithm on the new, smaller string.
 
         """
         states = set(range(10))
