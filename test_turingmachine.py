@@ -26,6 +26,7 @@ from turingmachine import L
 from turingmachine import logger
 from turingmachine import R
 from turingmachine import TuringMachine
+from turingmachine import UnknownSymbol
 
 
 class TestTuringMachine(unittest.TestCase):
@@ -42,6 +43,40 @@ class TestTuringMachine(unittest.TestCase):
 
         """
         logger.setLevel(self.level)
+
+    def test_unknown_symbol(self):
+        """Tests that an error is raised when an unknown symbol (that is, a
+        symbol for which there is no entry in the transition function) is
+        encountered in the string.
+
+        """
+        states = set(range(4))
+        initial_state = 0
+        accept_state = 2
+        reject_state = 3
+        transitions = {
+            # repeatedly move right, writing a bogus character as it goes
+            0: {
+                '0': (0, '0', R),
+                '1': (0, '?', R),
+                '_': (1, '_', L)
+                },
+            # accept on the last symbol
+            1: {
+                '0': (accept_state, '0', R),
+                '1': (accept_state, '1', R),
+                '_': (accept_state, '_', R)
+                },
+            #2: {},  # this is the accept state
+            #3: {}   # this is the reject state
+            }
+        bogus_symbol = TuringMachine(states, initial_state, accept_state,
+                                     reject_state, transitions)
+        try:
+            bogus_symbol('_0101_')
+            assert False, 'Should have raised an exception'
+        except UnknownSymbol:
+            pass
 
     def test_move_left_and_right(self):
         """Tests the execution of a Turing machine that simply moves left and

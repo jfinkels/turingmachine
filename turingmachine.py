@@ -36,6 +36,14 @@ L = -1
 R = +1
 
 
+class UnknownSymbol(Exception):
+    """This exception is raised when the Turing machine encounters a symbol
+    that does not appear in the transition dictionary.
+
+    """
+    pass
+
+
 class TuringMachine(object):
     """An implementation of the Turing machine model.
 
@@ -152,9 +160,11 @@ class TuringMachine(object):
         # for the sake of brevity, rename some verbose instance variables
         h = self.head_location
         q = self.current_state
+        s = string[h]
+        # check if the transition table has an entry for the current symbol
+        if s not in self.transition[q]:
+            raise UnknownSymbol(s)
         # compute the new configuration from the transition function
-        #
-        # TODO raise an exception if string[h] contains an unknown symbol
         new_state, new_symbol, direction = self.transition[q][string[h]]
         # check for accepting or rejecting configurations
         if new_state == self.accept_state:
