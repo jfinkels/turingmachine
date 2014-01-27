@@ -28,6 +28,7 @@ from turingmachine import logger
 from turingmachine import R
 from turingmachine import TuringMachine
 from turingmachine import UnknownSymbol
+from turingmachine import UnknownState
 
 
 class TestTuringMachine(unittest.TestCase):
@@ -103,6 +104,18 @@ class TestTuringMachine(unittest.TestCase):
         except BadSymbol:
             pass
 
+    def test_bad_state(self):
+        """Tests that an error is raised when the user specifies a bad state
+        in the transition table.
+
+        """
+        bad_state = TuringMachine(set(range(3)), 0, 1, 2, {})
+        try:
+            bad_state('__')
+            assert False, 'Should have raised an exception'
+        except UnknownState:
+            pass
+
     def test_move_left_and_right(self):
         """Tests the execution of a Turing machine that simply moves left and
         right.
@@ -124,7 +137,6 @@ class TestTuringMachine(unittest.TestCase):
                                         reject_state, transition)
         for s in '', '010', '000000':
             assert move_left_right('_' + s + '_')
-            move_left_right.reset()
 
     def test_is_even(self):
         """Tests the execution of a Turing machine that computes whether a
@@ -159,10 +171,8 @@ class TestTuringMachine(unittest.TestCase):
                                 reject_state, transition)
         for s in '011010', '0', '1100010':
             assert is_even('_' + s + '_')
-            is_even.reset()
         for s in '1101', '1', '', '01001':
             assert not is_even('_' + s + '_')
-            is_even.reset()
 
     def test_parity(self):
         """Tests the execution of a Turing machine that computes the parity of
@@ -204,10 +214,8 @@ class TestTuringMachine(unittest.TestCase):
                                reject_state, transition)
         for s in '011010', '1', '1101011':
             assert parity('_' + s + '_')
-            parity.reset()
         for s in '1001', '0', '', '001001':
             assert not parity('_' + s + '_')
-            parity.reset()
 
     def test_is_palindrome(self):
         """Tests the execution of a Turing machine that computes whether a
@@ -303,7 +311,5 @@ class TestTuringMachine(unittest.TestCase):
                                       reject_state, transition)
         for s in '', '0', '010', '111010111':
             assert is_palindrome('_' + s + '_')
-            is_palindrome.reset()
         for s in '01', '110', '111100001':
             assert not is_palindrome('_' + s + '_')
-            is_palindrome.reset()
