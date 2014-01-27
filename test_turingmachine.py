@@ -22,6 +22,7 @@ from collections import defaultdict
 import logging
 import unittest
 
+from turingmachine import BadSymbol
 from turingmachine import L
 from turingmachine import logger
 from turingmachine import R
@@ -76,6 +77,30 @@ class TestTuringMachine(unittest.TestCase):
             bogus_symbol('_0101_')
             assert False, 'Should have raised an exception'
         except UnknownSymbol:
+            pass
+
+    def test_bad_symbol(self):
+        """Tests that an error is raised when the user specifies a bad symbol
+        in the transition table.
+
+        """
+        states = set(range(3))
+        initial_state = 0
+        accept_state = 1
+        reject_state = 2
+        transitions = {
+            0: {
+                '0': (0, '', R),
+                '1': (0, '', R),
+                '_': (1, '', R)
+                }
+            }
+        bad_symbol = TuringMachine(states, initial_state, accept_state,
+                                   reject_state, transitions)
+        try:
+            bad_symbol('_0_')
+            assert False, 'Should have raised an exception'
+        except BadSymbol:
             pass
 
     def test_move_left_and_right(self):

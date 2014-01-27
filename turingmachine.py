@@ -44,6 +44,14 @@ class UnknownSymbol(Exception):
     pass
 
 
+class BadSymbol(Exception):
+    """This exception is raised when the user attempts to specify a tape
+    alphabet that includes strings of length not equal to one.
+
+    """
+    pass
+
+
 class TuringMachine(object):
     """An implementation of the Turing machine model.
 
@@ -163,9 +171,13 @@ class TuringMachine(object):
         s = string[h]
         # check if the transition table has an entry for the current symbol
         if s not in self.transition[q]:
-            raise UnknownSymbol(s)
+            raise UnknownSymbol('"{}" not in transition dictionary'.format(s))
         # compute the new configuration from the transition function
         new_state, new_symbol, direction = self.transition[q][string[h]]
+        # assert that the symbol to write is a string of length one
+        if len(new_symbol) != 1:
+            raise BadSymbol('tape alphabet must only include symbols of length'
+                            '1 ({})'.format(new_symbol))
         # check for accepting or rejecting configurations
         if new_state == self.accept_state:
             return True
