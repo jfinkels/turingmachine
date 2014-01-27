@@ -44,6 +44,14 @@ class UnknownSymbol(Exception):
     pass
 
 
+class UnknownState(Exception):
+    """This exception is raised when the Turing machine enters a state that
+    does not appear in the transition dictionary.
+
+    """
+    pass
+
+
 class BadSymbol(Exception):
     """This exception is raised when the user attempts to specify a tape
     alphabet that includes strings of length not equal to one.
@@ -100,13 +108,9 @@ class TuringMachine(object):
         self.accept_state = accept_state
         self.reject_state = reject_state
         self.initial_state = initial_state
-        self.current_state = self.initial_state
         self.transition = transition
-        # we assume that all strings will be input with one blank on the left
-        # and one blank on the right
-        self.head_location = 1
 
-    def _log_state(self, string):
+    def _log_state(self, string, head_location, current_state):
         """Logs a visual representation of the current head location, state,
         and contents of the tape of this Turing machine.
 
@@ -126,12 +130,10 @@ class TuringMachine(object):
         execution of the Turing machine on a particular string.
 
         """
-        h = self.head_location
-        q = self.current_state
         logger.debug('')
         logger.debug(string)
-        logger.debug(' ' * h + '^')
-        logger.debug(' ' * h + str(q))
+        logger.debug(' ' * head_location + '^')
+        logger.debug(' ' * head_location + str(current_state))
 
     def __call__(self, string):
         """Runs the computer program specified by this Turing machine on
@@ -147,58 +149,56 @@ class TuringMachine(object):
 
         Calling this Turing machine executes the program specified by its
         transition function and returns ``True`` if the Turing machine halts
-        and accepts and ``False`` if the Turing machine halts and rejects.
-
-        If you intend to call this Turing machine more than once, you must call
-        :meth:`reset` after each invocation, in order to reset the state of the
-        Turing machine to its initial state and the location of the read/write
-        head to the left most non-blank character of the string.
+        and accepts and ``False`` if the Turing machine halts and rejects. This
+        method may never terminate if the transition function indicates that
+        the Turing machine should loop forever.
 
         """
-        # If the head has moved too far to the left or right, add a blank to
-        # the current string in the appropriate location. If a blank is added
-        # to the left, the head location must be incremented, since the string
-        # has now essentially been shifted right by one cell.
-        if self.head_location < 0:
-            string = '_' + string
-            self.head_location += 1
-        elif self.head_location >= len(string):
-            string += '_'
-        self._log_state(string)
-        # for the sake of brevity, rename some verbose instance variables
-        h = self.head_location
-        q = self.current_state
-        s = string[h]
-        # check if the transition table has an entry for the current symbol
-        if s not in self.transition[q]:
-            raise UnknownSymbol('"{}" not in transition dictionary'.format(s))
-        # compute the new configuration from the transition function
-        new_state, new_symbol, direction = self.transition[q][string[h]]
-        # assert that the symbol to write is a string of length one
-        if len(new_symbol) != 1:
-            raise BadSymbol('tape alphabet must only include symbols of length'
-                            '1 ({})'.format(new_symbol))
-        # check for accepting or rejecting configurations
-        if new_state == self.accept_state:
-            return True
-        if new_state == self.reject_state:
-            return False
-        # write the specified new symbol to the string; Python strings are
-        # immutable, so we must create a new one
-        new_string = string[:h] + new_symbol + string[h + 1:]
-        # set the new state and head location
-        self.current_state = new_state
-        # direction is either L or R, which are defined to be -1 and +1
-        self.head_location += direction
-        # continue executing the Turing machine with the new configuration
-        return self(new_string)
-
-    def reset(self):
-        """Resets the Turing machine to its initial state and head location.
-
-        This method should be called before each invocation of this Turing
-        machine.
-
-        """
-        self.head_location = 1
-        self.current_state = self.initial_state
+        current_state = self.initial_state
+        # We assume that all strings will be input with one blank on the left
+        # and one blank on the right, so the head is initially at position 1.
+        head_location = 1
+        # may loop forever if accept or reject state are never found
+        while True:
+            # If the head has moved too far to the left or right, add a blank
+            # to the current string in the appropriate location. If a blank is
+            # added to the left, the head location must be incremented, since
+            # the string has now essentially been shifted right by one cell.
+            if head_location < 0:
+                string = '_' + string
+                head_location += 1
+            elif head_location >= len(string):
+                string += '_'
+            self._log_state(string, head_location, current_state)
+            # check for accepting or rejecting configurations
+            if current_state == self.accept_state:
+                return True
+            if current_state == self.reject_state:
+                return False
+            # for the sake of brevity, rename some verbose variables
+            h = head_location
+            q = current_state
+            s = string[h]
+            # if the current_state is not in the transition table, raise error
+            if q not in self.transition:
+                raise UnknownState('{} is not in transition'
+                                   ' dictionary'.format(q))
+            # check if the transition table has an entry for the current symbol
+            if s not in self.transition[q]:
+                raise UnknownSymbol('"{}" not in transition'
+                                    ' dictionary'.format(s))
+            # compute the new configuration from the transition function
+            new_state, new_symbol, direction = self.transition[q][s]
+            # assert that the symbol to write is a string of length one
+            if len(new_symbol) != 1:
+                raise BadSymbol('tape alphabet must only include symbols of'
+                                ' length 1 ({})'.format(new_symbol))
+            # write the specified new symbol to the string; Python strings are
+            # immutable, so we must create a new one
+            string = string[:h] + new_symbol + string[h + 1:]
+            # set the new state and head location
+            current_state = new_state
+            # direction is either L or R, which are defined to be -1 and +1
+            head_location += direction
+        raise Exception('Turing machine somehow halted without accepting or'
+                        ' rejecting.')
