@@ -26,7 +26,6 @@ def test_machine(machine, should_accept, should_reject):
     # count the number of strings that the machine correctly accepts
     score = 0
     for w in should_accept:
-        machine.reset()
         try:
             # add blanks before and after the string
             assert machine('_' + w + '_')
@@ -41,7 +40,6 @@ def test_machine(machine, should_accept, should_reject):
             logger.error(msg)
     # count the number of strings that the machine correctly rejects
     for w in should_reject:
-        machine.reset()
         try:
             # add blanks before and after the string
             assert not machine('_' + w + '_')
